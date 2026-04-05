@@ -1,0 +1,129 @@
+/* تصميم نظام جعبوس المعتمد */
+body {
+  margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif;
+  background-color: #f1f5f9; direction: rtl; color: #1e293b;
+}
+
+.app-container { max-width: 500px; margin: 0 auto; padding-bottom: 110px; }
+
+/* الهيدر والبحث */
+header {
+  background: white; padding: 15px; position: sticky; top: 0; z-index: 50;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.search-box {
+  display: flex; background: #f8fafc; padding: 10px 15px;
+  border-radius: 12px; align-items: center; border: 1px solid #e2e8f0;
+}
+.search-box input { border: none; background: none; width: 100%; padding-right: 10px; outline: none; }
+
+/* الإحصائيات */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 15px; }
+.stat-card { padding: 12px; border-radius: 15px; color: white; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.stat-card.red { background: #ef4444; }
+.stat-card.yellow { background: #eab308; }
+.stat-card.green { background: #22c55e; }
+.stat-card span { font-size: 22px; font-weight: bold; }
+
+/* بطاقات المنتجات (الستايل المفضل لديك) */
+.card {
+  background: white; padding: 18px; margin: 0 15px 12px 15px;
+  border-radius: 15px; display: flex; justify-content: space-between;
+  align-items: center; border-right: 8px solid #ddd;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+.status-red { border-right-color: #ef4444; background: #fef2f2; }
+.status-orange { border-right-color: #f97316; background: #fff7ed; }
+.status-yellow { border-right-color: #eab308; background: #fefce8; }
+.status-green { border-right-color: #22c55e; background: #f0fdf4; }
+
+/* واجهات التقارير والإعدادات (الاحترافية) */
+.view-panel { background: white; margin: 15px; padding: 25px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+.panel-title { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 25px; }
+
+/* فك تلاصق نصوص التقارير */
+.summary-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 15px 10px; border-bottom: 1px solid #f8fafc; margin-bottom: 5px;
+}
+.text-red { color: #ef4444; font-weight: bold; }
+.text-orange { color: #f97316; font-weight: bold; }
+
+/* أزرار الإجراءات */
+.btn-primary { background: #2563eb; color: white; padding: 15px; border: none; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.btn-whatsapp { background: #22c55e; margin-bottom: 10px; }
+.btn-backup-outline { background: white; color: #2563eb; border: 2px solid #2563eb; margin-top: 15px; }
+
+/* الإعدادات */
+.setting-row { display: flex; align-items: center; gap: 15px; padding: 15px; background: #f8fafc; border-radius: 12px; margin-bottom: 10px; }
+.setting-row div { display: flex; flex-direction: column; }
+.setting-row strong { font-size: 14px; color: #334155; }
+.setting-row p { margin: 0; font-size: 12px; color: #94a3b8; }
+
+.input-style { width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; outline: none; }
+.nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #e2e8f0; }
+.nav-bar button { border: none; background: none; color: #94a3b8; display: flex; flex-direction: column; align-items: center; font-size: 11px; cursor: pointer; }
+.nav-bar button.active { color: #2563eb; font-weight: bold; }
+
+.toggle-box { display: flex; background: #f1f5f9; padding: 5px; border-radius: 12px; margin-bottom: 15px; }
+.toggle-box button { flex: 1; border: none; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 12px; background: none; }
+.toggle-box button.active { background: white; color: #2563eb; font-weight: bold; }
+/* --- إعدادات الطباعة الاحترافية --- */
+@media print {
+  /* إخفاء كل شيء ما عدا التقرير */
+  nav, header, .btn-primary, .btn-share, .btn-download, .nav-bar, .stats-grid, .toggle-box {
+    display: none !important;
+  }
+
+  body {
+    background-color: white !important;
+    font-size: 12pt;
+  }
+
+  .app-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* تصميم رأس التقرير */
+  .print-header {
+    display: block !important;
+    text-align: center;
+    border-bottom: 2px solid #2563eb;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+  }
+
+  /* تصميم الجدول الاحترافي */
+  .print-table {
+    display: table !important;
+    width: 100%;
+    border-collapse: collapse;
+    direction: rtl;
+  }
+
+  .print-table th, .print-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .print-table th {
+    background-color: #f1f5f9 !important;
+    color: #2563eb !important;
+  }
+
+  /* إظهار الألوان في الطباعة */
+  .print-status-red { background-color: #fee2e2 !important; -webkit-print-color-adjust: exact; }
+  .print-status-yellow { background-color: #fef9c3 !important; -webkit-print-color-adjust: exact; }
+}
+
+/* إخفاء رأس الطباعة في العرض العادي */
+.print-header, .print-table { display: none; }
+
+@media print {
+  .no-print { display: none !important; }
+  .print-footer { display: block !important; }
+}
