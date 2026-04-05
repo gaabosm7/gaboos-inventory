@@ -5,7 +5,7 @@ import {
   CheckCircle, AlertTriangle, XCircle, Share2, Download, Database, Layers, Folder, User
 } from 'lucide-react';
 
-const API_URL = "http://localhost:5000/api/products";
+const API_URL = "https://gaboos-api.onrender.com/api/products";
 
 export default function App() {
   const [tab, setTab] = useState('dash');
