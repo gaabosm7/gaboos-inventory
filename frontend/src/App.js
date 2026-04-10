@@ -94,7 +94,7 @@ const shareAsPDF = async () => {
     const filter = form.reportFilter || 'all';
     if (filter === 'critical') return products.filter(p => p.days_left > 0 && p.days_left <= 60);
     if (filter === 'expired') return products.filter(p => p.days_left <= 0);
-    if (filter === 'both') return products.filter(p => p.days_left <= 60);
+    if (filter === 'both') return products.filter(p => p.days_left <= 90);
     return products;
   };
 
@@ -122,7 +122,11 @@ const shareAsPDF = async () => {
           <>
             <div className="stats-grid">
               <div className="stat-card red"><XCircle /> <span>{products.filter(p => p.days_left <= 0).length}</span><small>منتهي</small></div>
-              <div className="stat-card yellow"><AlertTriangle /> <span>{products.filter(p => p.days_left > 0 && p.days_left <= 60).length}</span><small>قريب</small></div>
+             <div className="stat-card yellow">
+  <AlertTriangle /> 
+  <span>{products.filter(p => p.days_left > 0 && p.days_left <= 90).length}</span>
+  <small>قريب (3 أشهر)</small>
+</div>
               <div className="stat-card green"><CheckCircle /> <span>{products.filter(p => p.days_left > 60).length}</span><small>سليم</small></div>
             </div>
             {products.filter(p => p.name.includes(search) || p.note?.includes(search)).map(p => (
@@ -279,8 +283,9 @@ const shareAsPDF = async () => {
 }
 
 const getStyle = (d) => {
-  if (d <= 0) return 'status-red';
-  if (d <= 30) return 'status-orange';
-  if (d <= 60) return 'status-yellow';
-  return 'status-green';
+  if (d <= 0) return 'status-red';      // منتهي
+  if (d <= 30) return 'status-orange';  // خطر جداً (شهر)
+  if (d <= 90) return 'status-yellow';  // تنبيه (3 أشهر)
+  return 'status-green';                // سليم
+
 };
