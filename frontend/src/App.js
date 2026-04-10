@@ -7,9 +7,9 @@ import {
 } from 'lucide-react';
 
 // تذكر تغيير هذا الرابط عند الاختبار المحلي إلى http://localhost:5000/api/products
-const API_URL = "https://gaboos-api.onrender.com/api/products";
+//const API_URL = "https://gaboos-api.onrender.com/api/products";
 // غير هذا السطر مؤقتاً للاختبار
-//const API_URL = "http://localhost:5000/api/products";
+const API_URL = "http://localhost:5000/api/products";
 
 export default function App() {
 
