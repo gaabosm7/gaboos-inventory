@@ -1,20 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import html2pdf from 'html2pdf.js';
 import { 
   Bell, Package, FileText, Settings, Trash2, Edit3, Search, 
-  CheckCircle, AlertTriangle, XCircle, Share2, Download, Database, Layers, Folder, User
+  CheckCircle, AlertTriangle, XCircle, Share2, Download, Database, Layers, Folder, User, Hash
 } from 'lucide-react';
 
-const API_URL = "https://gaboos-api.onrender.com/api/products";
+// تذكر تغيير هذا الرابط عند الاختبار المحلي إلى http://localhost:5000/api/products
+//const API_URL = "https://gaboos-api.onrender.com/api/products";
+// غير هذا السطر مؤقتاً للاختبار
+const API_URL = "http://localhost:5000/api/products";
 
 export default function App() {
+
+const shareAsPDF = async () => {
+  const element = document.querySelector('.report-preview-container'); // الجزء الذي سيتحول لـ PDF
+  const opt = {
+    margin: 10,
+    filename: `Gaboos_Report_${new Date().toLocaleDateString()}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  try {
+    // 1. توليد ملف PDF كـ Blob (بيانات ثنائية)
+    const pdfBlob = await html2pdf().set(opt).from(element).outputBlob();
+    
+    // 2. إنشاء ملف من الـ Blob للمشاركة
+    const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
+
+    // 3. التحقق من دعم المتصفح للمشاركة (يعمل في الجوال)
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: 'تقرير المخزن',
+        text: 'إليك تقرير جرد المخزن من نظام جعبوس'
+      });
+    } else {
+      // إذا كان المتصفح لا يدعم المشاركة (مثل الكمبيوتر)، سيقوم بتحميله فقط
+      html2pdf().set(opt).from(element).save();
+      alert("تم تحميل التقرير، يمكنك إرساله يدوياً عبر الواتساب");
+    }
+  } catch (error) {
+    console.error("خطأ في توليد PDF:", error);
+    alert("حدث خطأ أثناء محاولة المشاركة");
+  }
+};
+
   const [tab, setTab] = useState('dash');
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [editId, setEditId] = useState(null);
   const [mode, setMode] = useState('calc');
   const [form, setForm] = useState({ 
-    name: '', prodDate: '', months: '', manualExpiry: '', note: '', backupPath: '', reportFilter: 'all' 
+    name: '', prodDate: '', months: '', manualExpiry: '', note: '', quantity: '', backupPath: '', reportFilter: 'all' 
   });
 
   const fetchProducts = () => axios.get(API_URL).then(r => setProducts(r.data)).catch(e => console.error(e));
@@ -23,13 +63,14 @@ export default function App() {
   const saveProduct = async () => {
     if (!form.name) return alert("الاسم مطلوب");
     try {
+      const payload = { ...form, mode, quantity: parseInt(form.quantity) || 0 };
       if (editId) {
-        await axios.put(`${API_URL}/${editId}`, { ...form, mode });
+        await axios.put(`${API_URL}/${editId}`, payload);
         setEditId(null);
       } else {
-        await axios.post(API_URL, { ...form, mode });
+        await axios.post(API_URL, payload);
       }
-      setForm({ ...form, name: '', prodDate: '', months: '', manualExpiry: '', note: '' });
+      setForm({ ...form, name: '', prodDate: '', months: '', manualExpiry: '', note: '', quantity: '' });
       fetchProducts();
       alert("تم الحفظ بنجاح ✅");
     } catch (e) { alert("خطأ ❌"); }
@@ -42,7 +83,8 @@ export default function App() {
       name: p.name, 
       prodDate: p.production_date?.split('T')[0] || '', 
       manualExpiry: p.expiry_date.split('T')[0],
-      note: p.note || '' 
+      note: p.note || '',
+      quantity: p.quantity || 0
     });
     setMode(p.production_date ? 'calc' : 'manual');
     setTab('manage');
@@ -70,7 +112,7 @@ export default function App() {
         <header>
           <div className="search-box">
             <Search size={18} color="#888" />
-            <input placeholder="بحث في بضائع جعبوس..." value={search} onChange={e => setSearch(e.target.value)} />
+            <input placeholder="بحث عن منتج  ..." value={search} onChange={e => setSearch(e.target.value)} />
           </div>
         </header>
       )}
@@ -87,6 +129,7 @@ export default function App() {
               <div key={p.id} className={`card ${getStyle(p.days_left)}`}>
                 <div>
                   <div style={{fontWeight:'bold'}}>{p.name}</div>
+                  <div style={{fontSize:'12px', color:'#2563eb', fontWeight:'bold', marginTop:'4px'}}>الكمية: {p.quantity || 0}</div>
                   <div style={{fontSize:'11px', color:'#666', marginTop:'4px'}}><Layers size={10}/> {p.note || 'دفعة عامة'}</div>
                   <div style={{fontSize:'10px', opacity:0.7}}>ينتهي: {p.expiry_date.split('T')[0]}</div>
                 </div>
@@ -107,7 +150,12 @@ export default function App() {
               <button className={mode === 'manual' ? 'active' : ''} onClick={() => setMode('manual')}>تاريخ مباشر</button>
             </div>
             <input className="input-style" placeholder="اسم الصنف" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
-            <input className="input-style" placeholder="رقم الدفعة / ملاحظة" value={form.note} onChange={e => setForm({...form, note: e.target.value})} />
+            
+            <div style={{display:'flex', gap:'10px'}}>
+               <input type="number" className="input-style" placeholder="الكمية" value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} />
+               <input className="input-style" placeholder="رقم الدفعة / ملاحظة" value={form.note} onChange={e => setForm({...form, note: e.target.value})} />
+            </div>
+
             {mode === 'calc' ? (
               <div style={{display:'flex', gap:'10px'}}>
                 <input type="date" className="input-style" value={form.prodDate} onChange={e => setForm({...form, prodDate: e.target.value})} />
@@ -133,66 +181,49 @@ export default function App() {
 
         {tab === 'report' && (
           <div className="view-panel">
+            {/* قسم التقارير كما هو مع إضافة عمود الكمية في الجدول */}
             <div className="panel-title no-print">
               <FileText size={40} color="#2563eb" />
               <h3>مركز التقارير والجرد</h3>
             </div>
-
             <div className="filter-section no-print" style={{marginBottom: '20px', padding: '15px', background: '#f8fafc', borderRadius: '12px'}}>
               <label style={{fontWeight: 'bold', display: 'block', marginBottom: '8px', fontSize: '14px'}}>تخصيص بيانات التقرير:</label>
-              <select className="input-style" value={form.reportFilter} onChange={(e) => setForm({...form, reportFilter: e.target.value})} style={{marginBottom: '0'}}>
+              <select className="input-style" value={form.reportFilter} onChange={(e) => setForm({...form, reportFilter: e.target.value})}>
                 <option value="all">كل المخزن</option>
-                <option value="critical">المنتجات الحرجة (قريبة الانتهاء)</option>
-                <option value="expired">المنتجات المنتهية فقط</option>
-                <option value="both">المنتهية والحرجة معاً</option>
+                <option value="critical">المنتجات الحرجة</option>
+                <option value="expired">المنتهية فقط</option>
+                <option value="both">المنتهية والحرجة</option>
               </select>
             </div>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }} className="no-print">
-              <button className="btn-primary" style={{background: '#6366f1'}} onClick={() => window.print()}>
-                <Download size={18}/> طباعة أو تصدير PDF
-              </button>
-              <button className="btn-primary btn-whatsapp" onClick={() => {
-                 const list = getFilteredProducts();
-                 let msg = `📦 *تقرير ${getReportTitle()}*\n` + list.map(p => `- ${p.name} (${p.note}): باقي ${p.days_left} يوم`).join('\n');
-                 window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
-              }}><Share2 size={18}/> مشاركة عبر WhatsApp</button>
+              <button className="btn-primary" style={{background: '#6366f1'}} onClick={() => window.print()}><Download size={18}/> طباعة أو PDF</button>
+              <button className="btn-primary" style={{background: '#25d366'}} onClick={shareAsPDF}>
+  <Share2 size={18}/> مشاركة التقرير PDF عبر WhatsApp
+</button>
             </div>
-
             <div className="report-preview-container" style={{marginTop: '25px'}}>
               <div className="print-header">
-                <h1 style={{color: '#2563eb', margin: '0'}}>متجر عمر اليماني للجملة</h1>
-                <h2 style={{fontSize: '18px', margin: '10px 0'}}>تقرير: {getReportTitle()}</h2>
+                <h1>متجر عمر اليماني للجملة</h1>
+                <h2>تقرير: {getReportTitle()}</h2>
                 <p>تاريخ الإصدار: {new Date().toLocaleDateString('ar-YE')}</p>
               </div>
-
-              <table className="print-table" style={{display: 'table'}}>
+              <table className="print-table">
                 <thead>
-                  <tr>
-                    <th>اسم الصنف</th>
-                    <th>الدفعة / الملاحظة</th>
-                    <th>تاريخ الانتهاء</th>
-                    <th>المتبقي</th>
-                    <th>الحالة</th>
-                  </tr>
+                  <tr><th>اسم الصنف</th><th>الكمية</th><th>الملاحظة</th><th>الانتهاء</th><th>الحالة</th></tr>
                 </thead>
                 <tbody>
                   {getFilteredProducts().map(p => (
                     <tr key={p.id} className={p.days_left <= 0 ? 'print-status-red' : p.days_left <= 60 ? 'print-status-yellow' : ''}>
                       <td>{p.name}</td>
+                      <td>{p.quantity}</td>
                       <td>{p.note || 'عام'}</td>
                       <td>{p.expiry_date.split('T')[0]}</td>
-                      <td>{p.days_left} يوم</td>
                       <td>{p.days_left <= 0 ? 'منتهي' : p.days_left <= 60 ? 'تنبيه' : 'سليم'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              
-              {/* الحقوق في أسفل التقرير */}
-              <div className="print-footer" style={{marginTop: '30px', textAlign: 'center', fontSize: '10px', color: '#666', borderTop: '1px dashed #eee', paddingTop: '10px'}}>
-                هذا التقرير استخرج آلياً بواسطة نظام "مخزوني" | تصميم وتطوير المهندس: <strong>محمد جعبوس</strong>
-              </div>
+              <div className="print-footer">تصميم وتطوير المهندس: محمد جعبوس</div>
             </div>
           </div>
         )}
@@ -222,12 +253,12 @@ export default function App() {
               <button className="btn-primary btn-backup-outline" onClick={async () => {
                   if (!form.backupPath) return alert("يرجى كتابة المسار أولاً");
                   try {
+                    // نستخدم localhost هنا لأن النسخ الاحتياطي يعمل فقط عند تشغيل السيرفر محلياً على جهازك
                     const res = await axios.post('http://localhost:5000/api/backup', { backupPath: form.backupPath });
                     alert(res.data.message); 
-                  } catch (e) { alert("فشل النسخ الاحتياطي"); }
+                  } catch (e) { alert("فشل النسخ الاحتياطي (تأكد من تشغيل السيرفر محلياً)"); }
                 }}>بدء النسخ الاحتياطي الآن</button>
               
-              {/* حقوق التطوير في شاشة الإعدادات */}
               <div style={{marginTop:'40px', textAlign:'center', borderTop:'1px solid #f1f5f9', paddingTop:'15px'}}>
                 <p style={{fontSize:'12px', color:'#64748b', margin:0}}>جميع الحقوق محفوظة © 2026</p>
                 <p style={{fontSize:'14px', fontWeight:'bold', color:'#2563eb', margin:'5px 0'}}>تصميم وتطوير: محمد جعبوس</p>
