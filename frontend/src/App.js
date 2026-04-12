@@ -3,7 +3,7 @@ import axios from 'axios';
 import html2pdf from 'html2pdf.js';
 import { 
   Bell, Package, FileText, Settings, Trash2, Edit3, Search, 
-  CheckCircle, AlertTriangle, XCircle, Share2, Download, Database, Layers, Folder, User, Hash
+  CheckCircle, AlertTriangle, XCircle, Share2, Download, Database, Layers, Folder, User
 } from 'lucide-react';
 
 // تذكر تغيير هذا الرابط عند الاختبار المحلي إلى http://localhost:5000/api/products
