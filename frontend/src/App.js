@@ -92,7 +92,7 @@ const shareAsPDF = async () => {
 
   const getFilteredProducts = () => {
     const filter = form.reportFilter || 'all';
-    if (filter === 'critical') return products.filter(p => p.days_left > 0 && p.days_left <= 60);
+    if (filter === 'critical') return products.filter(p => p.days_left > 0 && p.days_left <= 90);
     if (filter === 'expired') return products.filter(p => p.days_left <= 0);
     if (filter === 'both') return products.filter(p => p.days_left <= 90);
     return products;
