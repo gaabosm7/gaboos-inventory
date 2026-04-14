@@ -127,7 +127,12 @@ const shareAsPDF = async () => {
   <span>{products.filter(p => p.days_left > 0 && p.days_left <= 90).length}</span>
   <small>قريب (3 أشهر)</small>
 </div>
-              <div className="stat-card green"><CheckCircle /> <span>{products.filter(p => p.days_left > 60).length}</span><small>سليم</small></div>
+              <div className="stat-card green">
+  <CheckCircle /> 
+  {/* التعديل هنا: نغير 60 إلى 90 لكي يحسب فقط من لديه أكثر من 3 أشهر */}
+  <span>{products.filter(p => p.days_left > 90).length}</span>
+  <small>سليم (آمن)</small>
+</div>
             </div>
             {products.filter(p => p.name.includes(search) || p.note?.includes(search)).map(p => (
               <div key={p.id} className={`card ${getStyle(p.days_left)}`}>
@@ -213,19 +218,26 @@ const shareAsPDF = async () => {
               </div>
               <table className="print-table">
                 <thead>
-                  <tr><th>اسم الصنف</th><th>الكمية</th><th>الملاحظة</th><th>الانتهاء</th><th>الحالة</th></tr>
-                </thead>
-                <tbody>
-                  {getFilteredProducts().map(p => (
-                    <tr key={p.id} className={p.days_left <= 0 ? 'print-status-red' : p.days_left <= 60 ? 'print-status-yellow' : ''}>
-                      <td>{p.name}</td>
-                      <td>{p.quantity}</td>
-                      <td>{p.note || 'عام'}</td>
-                      <td>{p.expiry_date.split('T')[0]}</td>
-                      <td>{p.days_left <= 0 ? 'منتهي' : p.days_left <= 60 ? 'تنبيه' : 'سليم'}</td>
-                    </tr>
-                  ))}
-                </tbody>
+  <tr>
+    <th>اسم الصنف</th>
+    <th>الكمية</th>
+    <th>تاريخ الانتهاء</th>
+    <th>الوقت المتبقي</th> {/* عمود جديد */}
+    <th>الحالة</th>
+  </tr>
+</thead>
+<tbody>
+  {getFilteredProducts().map(p => (
+    <tr key={p.id} className={p.days_left <= 0 ? 'print-status-red' : p.days_left <= 90 ? 'print-status-yellow' : ''}>
+      <td>{p.name}</td>
+      <td>{p.quantity}</td>
+      <td>{p.expiry_date.split('T')[0]}</td>
+      {/* دالة ذكية لعرض الوقت بالشهور والأيام */}
+      <td>{Math.floor(p.days_left / 30)} شهر و {p.days_left % 30} يوم</td>
+      <td>{p.days_left <= 0 ? 'منتهي' : p.days_left <= 90 ? 'تنبيه (قريب)' : 'سليم'}</td>
+    </tr>
+  ))}
+</tbody>
               </table>
               <div className="print-footer">تصميم وتطوير المهندس: محمد جعبوس</div>
             </div>
