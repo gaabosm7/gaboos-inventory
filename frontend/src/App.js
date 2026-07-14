@@ -53,15 +53,37 @@ const shareAsPDF = async () => {
   const [search, setSearch] = useState("");
   const [editId, setEditId] = useState(null);
   const [mode, setMode] = useState('calc');
+  const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState({ 
-    name: '', prodDate: '', months: '', manualExpiry: '', note: '', quantity: '', backupPath: '', reportFilter: 'all' 
+    name: '', prodDate: '', months: '', manualExpiry: '', note: '', quantity: '', unitType: 'كرتون', backupPath: '', reportFilter: 'all' 
   });
 
-  const fetchProducts = () => axios.get(API_URL).then(r => setProducts(r.data)).catch(e => console.error(e));
+  const fetchProducts = () => axios.get(API_URL).then(r => {
+    setProducts(r.data);
+    checkSmartAlerts(r.data);
+  }).catch(e => console.error(e));
+
+  const checkSmartAlerts = (data) => {
+    const expired = data.filter(p => p.days_left <= 0);
+    const critical = data.filter(p => p.days_left > 0 && p.days_left <= 30);
+    
+    if (expired.length > 0 || critical.length > 0) {
+      setTimeout(() => {
+        alert(`🔔 تنبيه ذكي:\n\nيوجد ${expired.length} أصناف منتهية الصلاحية!\nويوجد ${critical.length} أصناف ستنتهي خلال أقل من شهر.\n\nيرجى مراجعة قسم المراقبة.`);
+      }, 1000);
+    }
+  };
+
   useEffect(() => { fetchProducts(); }, []);
 
   const saveProduct = async () => {
     if (!form.name) return alert("الاسم مطلوب");
+    if (isSaving) return;
+
+    const confirmSave = window.confirm(editId ? "هل أنت متأكد من تحديث بيانات هذا المنتج؟" : "هل أنت متأكد من إضافة هذا المنتج الجديد للمخزن؟");
+    if (!confirmSave) return;
+
+    setIsSaving(true);
     try {
       const payload = { ...form, mode, quantity: parseInt(form.quantity) || 0 };
       if (editId) {
@@ -70,22 +92,27 @@ const shareAsPDF = async () => {
       } else {
         await axios.post(API_URL, payload);
       }
-      setForm({ ...form, name: '', prodDate: '', months: '', manualExpiry: '', note: '', quantity: '' });
+      setForm({ ...form, name: '', prodDate: '', months: '', manualExpiry: '', note: '', quantity: '', unitType: 'كرتون' });
       fetchProducts();
       alert("تم الحفظ بنجاح ✅");
-    } catch (e) { alert("خطأ ❌"); }
+    } catch (e) { 
+      alert("حدث خطأ أثناء الحفظ ❌"); 
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const startEdit = (p) => {
     setEditId(p.id);
-    setForm({ 
-      ...form, 
-      name: p.name, 
-      prodDate: p.production_date?.split('T')[0] || '', 
-      manualExpiry: p.expiry_date.split('T')[0],
-      note: p.note || '',
-      quantity: p.quantity || 0
-    });
+	    setForm({ 
+	      ...form, 
+	      name: p.name, 
+	      prodDate: p.production_date?.split('T')[0] || '', 
+	      manualExpiry: p.expiry_date.split('T')[0],
+	      note: p.note || '',
+	      quantity: p.quantity || 0,
+	      unitType: p.unit_type || 'كرتون'
+	    });
     setMode(p.production_date ? 'calc' : 'manual');
     setTab('manage');
   };
@@ -138,7 +165,7 @@ const shareAsPDF = async () => {
               <div key={p.id} className={`card ${getStyle(p.days_left)}`}>
                 <div>
                   <div style={{fontWeight:'bold'}}>{p.name}</div>
-                  <div style={{fontSize:'12px', color:'#2563eb', fontWeight:'bold', marginTop:'4px'}}>الكمية: {p.quantity || 0}</div>
+	                  <div style={{fontSize:'12px', color:'#2563eb', fontWeight:'bold', marginTop:'4px'}}>الكمية: {p.quantity || 0} {p.unit_type || 'كرتون'}</div>
                   <div style={{fontSize:'11px', color:'#666', marginTop:'4px'}}><Layers size={10}/> {p.note || 'دفعة عامة'}</div>
                   <div style={{fontSize:'10px', opacity:0.7}}>ينتهي: {p.expiry_date.split('T')[0]}</div>
                 </div>
@@ -160,10 +187,20 @@ const shareAsPDF = async () => {
             </div>
             <input className="input-style" placeholder="اسم الصنف" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
             
-            <div style={{display:'flex', gap:'10px'}}>
-               <input type="number" className="input-style" placeholder="الكمية" value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} />
-               <input className="input-style" placeholder="رقم الدفعة / ملاحظة" value={form.note} onChange={e => setForm({...form, note: e.target.value})} />
-            </div>
+	            <div style={{display:'flex', gap:'10px', flexWrap:'wrap'}}>
+	               <div style={{flex: 1, minWidth: '120px'}}>
+	                 <input type="number" className="input-style" placeholder="الكمية" value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} />
+	               </div>
+	               <div style={{flex: 1, minWidth: '120px'}}>
+	                 <select className="input-style" value={form.unitType} onChange={e => setForm({...form, unitType: e.target.value})}>
+	                   <option value="كرتون">كرتون</option>
+	                   <option value="باكت">باكت</option>
+	                   <option value="جوته">جوته</option>
+	                   <option value="كيس">كيس</option>
+	                 </select>
+	               </div>
+	               <input className="input-style" style={{flex: '1 1 100%'}} placeholder="رقم الدفعة / ملاحظة" value={form.note} onChange={e => setForm({...form, note: e.target.value})} />
+	            </div>
 
             {mode === 'calc' ? (
               <div style={{display:'flex', gap:'10px'}}>
@@ -173,7 +210,13 @@ const shareAsPDF = async () => {
             ) : (
               <input type="date" className="input-style" value={form.manualExpiry} onChange={e => setForm({...form, manualExpiry: e.target.value})} />
             )}
-            <button className="btn-primary" onClick={saveProduct}>{editId ? "تحديث الدفعة" : "حفظ في المخزن"}</button>
+	            <button 
+	              className={`btn-primary ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`} 
+	              onClick={saveProduct} 
+	              disabled={isSaving}
+	            >
+	              {isSaving ? "جاري الحفظ..." : (editId ? "تحديث الدفعة" : "حفظ في المخزن")}
+	            </button>
             
             <h4 style={{marginTop:'30px', color:'#64748b'}}>التحكم بالسجلات:</h4>
             {products.filter(p => p.name.includes(search)).map(p => (

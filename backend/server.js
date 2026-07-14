@@ -35,13 +35,14 @@ app.get('/api/products', async (req, res) => {
 app.get('/api/export', async (req, res) => {
     try {
         // تحديث الاستعلام ليشمل الكمية
-        const result = await pool.query('SELECT name, quantity, expiry_date, (expiry_date - CURRENT_DATE) as days_left FROM products');
+        const result = await pool.query('SELECT name, quantity, unit_type, expiry_date, (expiry_date - CURRENT_DATE) as days_left FROM products');
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('جرد المخزن');
         
         worksheet.columns = [
             { header: 'اسم المنتج', key: 'name', width: 25 },
-            { header: 'الكمية', key: 'quantity', width: 12 }, // عمود جديد
+            { header: 'الكمية', key: 'quantity', width: 12 },
+            { header: 'الوحدة', key: 'unit_type', width: 12 },
             { header: 'تاريخ الانتهاء', key: 'expiry_date', width: 20 },
             { header: 'الأيام المتبقية', key: 'days_left', width: 15 },
         ];
@@ -49,7 +50,8 @@ app.get('/api/export', async (req, res) => {
         result.rows.forEach(row => {
             worksheet.addRow({
                 name: row.name,
-                quantity: row.quantity || 0, // إضافة القيمة هنا
+                quantity: row.quantity || 0,
+                unit_type: row.unit_type || 'كرتون',
                 expiry_date: row.expiry_date ? new Date(row.expiry_date).toISOString().split('T')[0] : 'N/A',
                 days_left: row.days_left
             });
@@ -64,22 +66,22 @@ app.get('/api/export', async (req, res) => {
 
 // 3. إضافة وتحديث وحذف (تمت إضافة الكمية في الإضافة والتعديل)
 app.post('/api/products', async (req, res) => {
-    const { name, prodDate, months, manualExpiry, mode, note, quantity } = req.body;
+    const { name, prodDate, months, manualExpiry, mode, note, quantity, unitType } = req.body;
     let expiry = mode === 'calc' ? calculate(prodDate, months) : manualExpiry;
     
-    // تحديث أمر الإدخال ليشمل الكمية
-    await pool.query('INSERT INTO products (name, production_date, expiry_date, note, quantity) VALUES ($1, $2, $3, $4, $5)', 
-    [name, prodDate || null, expiry, note || 'دفعة عامة', quantity || 0]);
+    // تحديث أمر الإدخال ليشمل الكمية ونوع الوحدة
+    await pool.query('INSERT INTO products (name, production_date, expiry_date, note, quantity, unit_type) VALUES ($1, $2, $3, $4, $5, $6)', 
+    [name, prodDate || null, expiry, note || 'دفعة عامة', quantity || 0, unitType || 'كرتون']);
     res.json({ success: true });
 });
 
 app.put('/api/products/:id', async (req, res) => {
-    const { name, prodDate, months, manualExpiry, mode, note, quantity } = req.body;
+    const { name, prodDate, months, manualExpiry, mode, note, quantity, unitType } = req.body;
     let expiry = mode === 'calc' ? calculate(prodDate, months) : manualExpiry;
     
-    // تحديث أمر التعديل ليشمل الكمية
-    await pool.query('UPDATE products SET name=$1, production_date=$2, expiry_date=$3, note=$4, quantity=$5 WHERE id=$6', 
-    [name, prodDate || null, expiry, note, quantity || 0, req.params.id]);
+    // تحديث أمر التعديل ليشمل الكمية ونوع الوحدة
+    await pool.query('UPDATE products SET name=$1, production_date=$2, expiry_date=$3, note=$4, quantity=$5, unit_type=$6 WHERE id=$7', 
+    [name, prodDate || null, expiry, note, quantity || 0, unitType || 'كرتون', req.params.id]);
     res.json({ success: true });
 });
 

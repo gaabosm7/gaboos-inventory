@@ -30,7 +30,12 @@ header {
   background: white; padding: 18px; margin: 0 15px 12px 15px;
   border-radius: 15px; display: flex; justify-content: space-between;
   align-items: center; border-right: 8px solid #ddd;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
 }
 .status-red { border-right-color: #ef4444; background: #fef2f2; }
 .status-orange { border-right-color: #f97316; background: #fff7ed; }
@@ -50,7 +55,16 @@ header {
 .text-orange { color: #f97316; font-weight: bold; }
 
 /* أزرار الإجراءات */
-.btn-primary { background: #2563eb; color: white; padding: 15px; border: none; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.btn-primary { 
+  background: linear-gradient(135deg, #2563eb, #1d4ed8); 
+  color: white; padding: 15px; border: none; border-radius: 12px; 
+  width: 100%; font-weight: bold; cursor: pointer; 
+  display: flex; align-items: center; justify-content: center; 
+  gap: 10px; transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+}
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; }
 .btn-whatsapp { background: #22c55e; margin-bottom: 10px; }
 .btn-backup-outline { background: white; color: #2563eb; border: 2px solid #2563eb; margin-top: 15px; }
 
