@@ -69,9 +69,9 @@ app.post('/api/products', async (req, res) => {
     const { name, prodDate, months, manualExpiry, mode, note, quantity, unitType } = req.body;
     let expiry = mode === 'calc' ? calculate(prodDate, months) : manualExpiry;
     
-    // تحديث أمر الإدخال ليشمل الكمية ونوع الوحدة
-    await pool.query('INSERT INTO products (name, production_date, expiry_date, note, quantity, unit_type) VALUES ($1, $2, $3, $4, $5, $6)', 
-    [name, prodDate || null, expiry, note || 'دفعة عامة', quantity || 0, unitType || 'كرتون']);
+    // تحديث أمر الإدخال ليشمل كافة الأعمدة المحتملة لتجنب أخطاء NOT NULL
+    await pool.query('INSERT INTO products (name, production_date, expiry_date, note, quantity, unit_type, category) VALUES ($1, $2, $3, $4, $5, $6, $7)', 
+    [name, prodDate || null, expiry, note || 'دفعة عامة', quantity || 0, unitType || 'كرتون', 'عام']);
     res.json({ success: true });
 });
 
@@ -80,8 +80,8 @@ app.put('/api/products/:id', async (req, res) => {
     let expiry = mode === 'calc' ? calculate(prodDate, months) : manualExpiry;
     
     // تحديث أمر التعديل ليشمل الكمية ونوع الوحدة
-    await pool.query('UPDATE products SET name=$1, production_date=$2, expiry_date=$3, note=$4, quantity=$5, unit_type=$6 WHERE id=$7', 
-    [name, prodDate || null, expiry, note, quantity || 0, unitType || 'كرتون', req.params.id]);
+    await pool.query('UPDATE products SET name=$1, production_date=$2, expiry_date=$3, note=$4, quantity=$5, unit_type=$6, category=$7 WHERE id=$8', 
+    [name, prodDate || null, expiry, note, quantity || 0, unitType || 'كرتون', 'عام', req.params.id]);
     res.json({ success: true });
 });
 
