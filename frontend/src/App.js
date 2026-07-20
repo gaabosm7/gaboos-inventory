@@ -168,18 +168,21 @@ const shareAsPDF = async () => {
         {tab === 'dash' && (
           <>
             <div className="stats-grid">
-              <div className="stat-card red"><XCircle /> <span>{products.filter(p => p.days_left <= 0).length}</span><small>منتهي</small></div>
-             <div className="stat-card yellow">
-  <AlertTriangle /> 
-  <span>{products.filter(p => p.days_left > 0 && p.days_left <= 90).length}</span>
-  <small>قريب (3 أشهر)</small>
-</div>
+              <div className="stat-card red">
+                <XCircle size={24} color="#ef4444" />
+                <span>{products.filter(p => p.days_left <= 0).length}</span>
+                <small>منتهي</small>
+              </div>
+              <div className="stat-card yellow">
+                <AlertTriangle size={24} color="#eab308" /> 
+                <span>{products.filter(p => p.days_left > 0 && p.days_left <= 90).length}</span>
+                <small>قريب</small>
+              </div>
               <div className="stat-card green">
-  <CheckCircle /> 
-  {/* التعديل هنا: نغير 60 إلى 90 لكي يحسب فقط من لديه أكثر من 3 أشهر */}
-  <span>{products.filter(p => p.days_left > 90).length}</span>
-  <small>سليم (آمن)</small>
-</div>
+                <CheckCircle size={24} color="#22c55e" /> 
+                <span>{products.filter(p => p.days_left > 90).length}</span>
+                <small>سليم</small>
+              </div>
             </div>
             {products.filter(p => p.name.includes(search) || p.note?.includes(search)).map(p => (
               <div key={p.id} className={`card ${getStyle(p.days_left)}`}>
