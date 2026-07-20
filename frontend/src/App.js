@@ -157,26 +157,26 @@ const shareAsPDF = async () => {
           <>
             <div className="stats-grid">
               <div className="stat-card red">
-                <XCircle size={24} color="#ef4444" />
+                <XCircle size={26} color="#ef4444" />
                 <span>{products.filter(p => p.days_left <= 0).length}</span>
-                <small>منتهي</small>
+                <small>نفد المخزون</small>
               </div>
               <div className="stat-card yellow">
-                <AlertTriangle size={24} color="#eab308" /> 
+                <AlertTriangle size={26} color="#eab308" /> 
                 <span>{products.filter(p => p.days_left > 0 && p.days_left <= 90).length}</span>
-                <small>قريب</small>
+                <small>منخفض</small>
               </div>
               <div className="stat-card green">
-                <CheckCircle size={24} color="#22c55e" /> 
+                <CheckCircle size={26} color="#22c55e" /> 
                 <span>{products.filter(p => p.days_left > 90).length}</span>
-                <small>سليم</small>
+                <small>متوفر</small>
               </div>
             </div>
             {products.filter(p => p.name.includes(search) || p.note?.includes(search)).map(p => (
               <div key={p.id} className={`card ${getStyle(p.days_left)}`}>
                 <div>
                   <div style={{fontWeight:'bold'}}>{p.name}</div>
-	                  <div style={{fontSize:'12px', color:'#2563eb', fontWeight:'bold', marginTop:'4px'}}>الكمية: {p.quantity || 0} {p.unit_type || 'كرتون'}</div>
+	                  <div style={{fontSize:'12px', color:'#38bdf8', fontWeight:'bold', marginTop:'4px'}}>الكمية: {p.quantity || 0} {p.unit_type || 'كرتون'}</div>
                   <div style={{fontSize:'11px', color:'#666', marginTop:'4px'}}><Layers size={10}/> {p.note || 'دفعة عامة'}</div>
                   <div style={{fontSize:'10px', opacity:0.7}}>ينتهي: {p.expiry_date.split('T')[0]}</div>
                 </div>
