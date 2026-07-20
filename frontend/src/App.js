@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import html2pdf from 'html2pdf.js';
 import { 
@@ -54,6 +54,8 @@ const shareAsPDF = async () => {
   const [editId, setEditId] = useState(null);
   const [mode, setMode] = useState('calc');
   const [isSaving, setIsSaving] = useState(false);
+  const nameInputRef = useRef(null);
+  const formRef = useRef(null);
   const [form, setForm] = useState({ 
     name: '', prodDate: '', months: '', manualExpiry: '', note: '', quantity: '', unitType: 'كرتون', backupPath: '', reportFilter: 'all' 
   });
@@ -74,7 +76,18 @@ const shareAsPDF = async () => {
     }
   };
 
-  useEffect(() => { fetchProducts(); }, []);
+  // جلب المنتجات مرة واحدة عند البداية
+  useEffect(() => { 
+    fetchProducts();
+  }, []);
+
+  // التركيز على خانة الاسم فقط عند الانتقال لتبويب الإدارة
+  useEffect(() => {
+    if (tab === 'manage') {
+      const timer = setTimeout(() => nameInputRef.current?.focus(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [tab]);
 
   const saveProduct = async () => {
     if (!form.name) return alert("الاسم مطلوب");
@@ -95,6 +108,7 @@ const shareAsPDF = async () => {
       setForm({ ...form, name: '', prodDate: '', months: '', manualExpiry: '', note: '', quantity: '', unitType: 'كرتون' });
       fetchProducts();
       alert("تم الحفظ بنجاح ✅");
+      nameInputRef.current?.focus();
     } catch (e) { 
       alert("حدث خطأ أثناء الحفظ ❌"); 
     } finally {
@@ -104,17 +118,23 @@ const shareAsPDF = async () => {
 
   const startEdit = (p) => {
     setEditId(p.id);
-	    setForm({ 
-	      ...form, 
-	      name: p.name, 
-	      prodDate: p.production_date?.split('T')[0] || '', 
-	      manualExpiry: p.expiry_date.split('T')[0],
-	      note: p.note || '',
-	      quantity: p.quantity || 0,
-	      unitType: p.unit_type || 'كرتون'
-	    });
+    setForm({ 
+      ...form, 
+      name: p.name, 
+      prodDate: p.production_date?.split('T')[0] || '', 
+      manualExpiry: p.expiry_date.split('T')[0],
+      note: p.note || '',
+      quantity: p.quantity || 0,
+      unitType: p.unit_type || 'كرتون'
+    });
     setMode(p.production_date ? 'calc' : 'manual');
     setTab('manage');
+    
+    // التمرير للأعلى والتركيز على خانة الاسم
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      nameInputRef.current?.focus();
+    }, 100);
   };
 
   const getFilteredProducts = () => {
@@ -185,7 +205,13 @@ const shareAsPDF = async () => {
               <button className={mode === 'calc' ? 'active' : ''} onClick={() => setMode('calc')}>حساب آلي</button>
               <button className={mode === 'manual' ? 'active' : ''} onClick={() => setMode('manual')}>تاريخ مباشر</button>
             </div>
-            <input className="input-style" placeholder="اسم الصنف" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
+	            <input 
+	              ref={nameInputRef}
+	              className="input-style" 
+	              placeholder="اسم الصنف" 
+	              value={form.name} 
+	              onChange={e => setForm({...form, name: e.target.value})} 
+	            />
             
 	            <div style={{display:'flex', gap:'10px', flexWrap:'wrap'}}>
 	               <div style={{flex: 1, minWidth: '120px'}}>
