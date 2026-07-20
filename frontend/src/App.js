@@ -62,19 +62,7 @@ const shareAsPDF = async () => {
 
   const fetchProducts = () => axios.get(API_URL).then(r => {
     setProducts(r.data);
-    checkSmartAlerts(r.data);
   }).catch(e => console.error(e));
-
-  const checkSmartAlerts = (data) => {
-    const expired = data.filter(p => p.days_left <= 0);
-    const critical = data.filter(p => p.days_left > 0 && p.days_left <= 30);
-    
-    if (expired.length > 0 || critical.length > 0) {
-      setTimeout(() => {
-        alert(`🔔 تنبيه ذكي:\n\nيوجد ${expired.length} أصناف منتهية الصلاحية!\nويوجد ${critical.length} أصناف ستنتهي خلال أقل من شهر.\n\nيرجى مراجعة قسم المراقبة.`);
-      }, 1000);
-    }
-  };
 
   // جلب المنتجات مرة واحدة عند البداية
   useEffect(() => { 
